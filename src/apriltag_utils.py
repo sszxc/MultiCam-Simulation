@@ -23,8 +23,7 @@ def at_detect(frame, T44_world_to_cam):
     tags = at_detector.detect(
         frame_gray, estimate_tag_pose=True, 
         camera_params=[827.678512401081, 827.856142111345, 
-        640, 400], tag_size=0.416)  # 实际测量应该是0.208 很奇怪
-    # print(len(tags))
+        640, 400], tag_size=0.416)
     if tags:
         # 位姿估计
         T44_tag_to_cam = np.c_[np.r_[tags[0].pose_R, [[0, 0, 0]]], np.r_[tags[0].pose_t*1000, [[1]]]]  # 拼接成4*4矩阵
