@@ -1,0 +1,4 @@
+opencv-python>=3.4,<3.5
+numpy
+pupil-apriltags
+pygame
