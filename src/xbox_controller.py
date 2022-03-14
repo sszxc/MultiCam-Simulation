@@ -33,8 +33,8 @@ def read_controller(CONTROLLER_TYPE=1):
     '''
     CONTROLLER_TYPE: 不同电脑对手柄的配置不同 0:XPS15 1:DELL7070
     command: -1退出；1复位；23相机切换
-    手柄: 左摇杆水平位移 右摇杆角度 LT&RT高度 A退出 B复位 LR切换相机
-    键盘: WASD平移 ZX高度 UJIKOL旋转 0复位 Q退出
+    手柄: 左摇杆水平位移 右摇杆角度 LT&RT旋转 左十字高度 A退出 B复位 LR切换相机
+    键盘: WASD平移 ZX高度 UJIKOL旋转 1复位 Q退出 23切换
     '''
     T_para = [[0, 0, 0], 0, 0, 0]
     command = 0
