@@ -80,29 +80,29 @@ def read_controller(CONTROLLER_TYPE=1):
         k = cv2.waitKey(0) & 0xFF
         if k == ord('q') or k == ord('Q'):
             command = -1
-        elif k == ord('A'):
+        elif k == ord('A') or k == ord('a'):
             T_para[1] += 250
-        elif k == ord('D'):
+        elif k == ord('D') or k == ord('d'):
             T_para[1] -= 250
-        elif k == ord('W'):
+        elif k == ord('W') or k == ord('w'):
             T_para[2] += 250
-        elif k == ord('S'):
+        elif k == ord('S') or k == ord('s'):
             T_para[2] -= 250
-        elif k == ord('Z'):
+        elif k == ord('Z') or k == ord('z'):
             T_para[3] += 250
-        elif k == ord('X'):
+        elif k == ord('X') or k == ord('x'):
             T_para[3] -= 250
-        elif k == ord('U'):
+        elif k == ord('U') or k == ord('u'):
             T_para[0][0] += 10
-        elif k == ord('J'):
+        elif k == ord('J') or k == ord('j'):
             T_para[0][0] -= 10
-        elif k == ord('I'):
+        elif k == ord('I') or k == ord('i'):
             T_para[0][1] += 10
-        elif k == ord('K'):
+        elif k == ord('K') or k == ord('k'):
             T_para[0][1] -= 10
-        elif k == ord('O'):
+        elif k == ord('O') or k == ord('o'):
             T_para[0][2] += 10
-        elif k == ord('L'):
+        elif k == ord('L') or k == ord('l'):
             T_para[0][2] -= 10
         elif k == ord('1'):
             command = 1
@@ -110,7 +110,6 @@ def read_controller(CONTROLLER_TYPE=1):
             command = 2
         elif k == ord('3'):
             command = 3
-
     return T_para, command
 
 if __name__ == "__main__":
