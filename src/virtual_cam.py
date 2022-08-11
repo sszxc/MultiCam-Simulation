@@ -11,17 +11,18 @@ import time
 import sys
 
 class Cam:
-    def __init__(self, IM, T, resolution, distortion=0):
+    def __init__(self, camera_name, parameters):
         '''初始化内外参'''
+        self.name = camera_name
         self.expand_for_distortion = 0.15  # 每侧扩张比例
-        self.update_IM(*IM)
-        self.update_T(*T)
-        self.T_default = copy.deepcopy(T)  # 存储初始值
-        self.height, self.width = resolution
-        self.init_view(*resolution)
-        self.distortion = distortion
+        self.update_IM(*parameters["intrinsic parameters"])
+        self.update_T(*parameters["extrinsic parameters"])
+        self.T_default = copy.deepcopy(parameters["extrinsic parameters"])  # 存储初始值
+        self.height, self.width = parameters["resolution"]
+        self.init_view(*parameters["resolution"])
+        self.distortion = parameters["distortion"]
         if self.distortion:
-            self.init_distortion_para()
+            self.init_distortion_para(self.distortion)
         print("camera set!")
 
     def update_IM(self, fx, fy, cx, cy):
@@ -176,16 +177,9 @@ class Cam:
         color_for_grid = (69, 214, 144)
         cv2.circle(topview.img, camera_center_projected, 10, color_for_grid, -1)
 
-    def init_distortion_para(self):
+    def init_distortion_para(self, distortion_parameters):
         '''一组正向模拟畸变系数'''
-        k1 =      -1.199
-        k2 =      0.7534
-        k3 =   -0.003025
-        k4 =      -1.534
-        k5 =       1.142
-        k6 =      -0.177
-        p1 = 0.0
-        p2 = 0.0
+        k1, k2, k3, k4, k5, k6, p1, p2 = distortion_parameters
         k = self.IM
 
         scale = 2*self.expand_for_distortion+1
@@ -294,3 +288,8 @@ def save_image(img, rename_by_time, path="/img/"):
     cv2.imencode('.jpg', img)[1].tofile(filename)  # 中文路径保存图片
     print("save img successfuly!")
     print(filename)
+
+if __name__ == "__main__":
+    IM = (500, 500, -500, -300)
+    T = ([0, 0, 0], 2500, 1500, 2500)
+    topview = Cam(IM, T, (1049, 1920))

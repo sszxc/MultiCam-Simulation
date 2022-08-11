@@ -2,31 +2,27 @@
 # Date: March 13th, 2022
 # Description: 主入口
 
+import yaml
 from src.virtual_cam import *
-from src.apriltag_utils import *
+# from src.apriltag_utils import *
 from src.xbox_controller import *
 
 if __name__ == "__main__":
-    # 创建理想俯视图相机
-    IM = (500, 500, -500, -300)
-    T = ([0, 0, 0], 2500, 1500, 2500)
-    topview = Cam(IM, T, (1049, 1920))
+    # 所有相机列表
+    all_cameras=[]
+    # 从config文件中读取参数 创建虚拟相机
+    with open("config/cameras.yaml", "r") as f:
+        config = yaml.load(f)
+        for camera_name, value in config.items():
+            print(camera_name, value)
+            all_cameras.append(Cam(camera_name, value))
 
-    # 创建第一个普通节点相机
-    IM = (1227.678512401081, 1227.856142111345,
-                  640, 400)
-    T = [[0, 0, 0], -3750, -1300, 1600]
-    cam_1 = Cam(IM, T, (800, 1280), distortion=1)
-
-    # 创建第二个普通节点相机
-    IM = (1227.678512401081, 1227.856142111345,
-                  640, 400)
-    T = [[0, 0, 0], -1750, -1450, 3750]
-    cam_2 = Cam(IM, T, (800, 1280), distortion=1)
-
-    # 相机列表和当前相机序号
-    cameras = [cam_1, cam_2]
+    # 当前相机序号
     index = 0
+    # 理想俯视图相机
+    topview = [cam for cam in all_cameras if cam.name == 'topview'][0]
+    # 普通节点相机
+    cameras = [cam for cam in all_cameras if cam.name != 'topview']
 
     # 设定平面上四个参考点
     reference_points = set_reference_points()
@@ -34,7 +30,7 @@ if __name__ == "__main__":
 
     # 导入背景图
     background = cv2.resize(cv2.imread('./img/grid_with_tags.jpg'), 
-                        (topview.img.shape[1], topview.img.shape[0]))
+                        (topview.width, topview.height))
 
     while 1:
         # 手动更新俯视图相机的图像
@@ -51,18 +47,18 @@ if __name__ == "__main__":
             cam.cam_frame_project(topview, (140, 144, 32))
         
             # 进行 AprilTag 检测
-            at_print(cam.img, at_detect(cam.img, cam.T44_world_to_cam))
+            # at_print(cam.img, at_detect(cam.img, cam.T44_world_to_cam))
 
-        # 缩放显示
-        cv2.imshow('camview_1', cv2.resize(
-                cam_1.img, (int(0.5*cam.img.shape[1]), int(0.5*cam.img.shape[0]))))
-        cv2.imshow('camview_2', cv2.resize(
-                cam_2.img, (int(0.5*cam.img.shape[1]), int(0.5*cam.img.shape[0]))))
+            # 缩放显示
+            cv2.imshow(cam.name, cv2.resize(
+                    cam.img, (int(0.5*cam.width), int(0.5*cam.height))))
+                    
         cv2.imshow('topview', cv2.resize(
-                topview.img, (int(cam.img.shape[1]), int(cam.img.shape[0]))))
+                topview.img, (int(cam.width), int(cam.height))))
 
         T_para, command = read_controller(CONTROLLER_TYPE=0)  # 读取控制器
         cameras[index].update_T(*list_add(T_para, cameras[index].T_para))  # 更新外参
+        print(T_para, command)
         
         if command == -1:  # 解析其他命令
             break
