@@ -2,6 +2,8 @@
 # Date: March 22th, 2021
 # Description: 获取Xbox手柄的输入
 
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import time
 import cv2

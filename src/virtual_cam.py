@@ -8,7 +8,98 @@ import random
 import math
 import copy
 import time
+import yaml
 import sys
+
+
+class VirtualCamEnv:
+    def __init__(self, config_file_path, background_path, AprilTag_detection=False):
+        '''
+        多相机虚拟环境
+
+        config_file_path: 相机配置文件路径
+        background_path: 背景图片路径
+        AprilTag_detection: 是否进行 AprilTag 检测任务
+        '''
+        # 所有相机列表
+        all_cameras=[]
+        # 从config文件中读取参数 创建虚拟相机
+        with open(config_file_path, "r") as f:
+            config = yaml.safe_load(f)
+            for camera_name, value in config.items():
+                all_cameras.append(Cam(camera_name, value))
+
+        # 当前相机序号
+        self.index = 0
+        # 理想俯视图相机
+        try:
+            self.topview = [cam for cam in all_cameras if cam.name == 'topview'][0]
+        except IndexError:
+            print("We need a topview camera. Please check the config file.")
+            exit(1)
+        # 普通节点相机
+        self.cameras = [cam for cam in all_cameras if cam.name != 'topview']
+        assert len(self.cameras) > 0, "We need at least one camera. Please check the config file."
+
+        # 设定平面上四个参考点
+        self.reference_points = set_reference_points()
+        self.points_topview = [self.topview.world_point_to_cam_pixel(point) for point in self.reference_points[0:4]]
+
+        # 导入背景图
+        self.background = cv2.resize(cv2.imread(background_path), 
+                            (self.topview.width, self.topview.height))
+
+        # AprilTag 检测任务
+        self.AprilTag_detection = AprilTag_detection
+        if self.AprilTag_detection:
+            from src.apriltag_utils import at_detect, at_print
+
+        print("Environment set!")
+
+    def render(self):
+        '''渲染相机图像'''
+        # 手动更新俯视图相机的图像
+        self.topview.img = copy.deepcopy(self.background)
+        
+        for cam in self.cameras:
+            # 利用前四个点生成变换矩阵
+            cam.update_M(self.reference_points[0:4], self.points_topview)
+
+            # 更新本相机图像
+            cam.update_img(self.background)
+
+            # 更新俯视图外框
+            cam.cam_frame_project(self.topview, (140, 144, 32))
+        
+            # 进行 AprilTag 检测
+            if self.AprilTag_detection:
+                at_print(cam.img, at_detect(cam.img, cam.T44_world_to_cam))
+
+            # 缩放显示
+            cv2.imshow(cam.name, cv2.resize(
+                    cam.img, (int(0.5*cam.width), int(0.5*cam.height))))
+                    
+        cv2.imshow('topview', cv2.resize(
+                self.topview.img, (int(cam.width), int(cam.height))))
+
+    def control(self, T_para, command):
+        '''更新相机位姿'''
+        self.cameras[self.index].update_T(*list_add(T_para, self.cameras[self.index].T_para))  # 更新外参
+        
+        if command == -1:  # 解析其他命令
+            sys.exit()
+        elif command == 1:
+            self.cameras[self.index].reset_T()
+        elif command == 2:
+            self.index = (self.index + 1) % len(self.cameras)
+        elif command == 3:
+            self.index = (self.index - 1) % len(self.cameras)
+
+    def __del__(self):
+        '''析构函数'''
+        print("Environment closed!")
+        cv2.destroyAllWindows()  # 释放并销毁窗口
+
 
 class Cam:
     def __init__(self, camera_name, parameters):
@@ -23,7 +114,7 @@ class Cam:
         self.distortion = parameters["distortion"]
         if self.distortion:
             self.init_distortion_para(self.distortion)
-        print("camera set!")
+        print("Camera set!")
 
     def update_IM(self, fx, fy, cx, cy):
         '''初始化相机内参'''
