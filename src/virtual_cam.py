@@ -27,7 +27,7 @@ class VirtualCamEnv:
         with open(config_file_path, "r") as f:
             config = yaml.safe_load(f)
             for camera_name, value in config.items():
-                all_cameras.append(Cam(camera_name, value))
+                all_cameras.append(Cam(camera_name, value, AprilTag_detection))
 
         # 当前相机序号
         self.index = 0
@@ -46,13 +46,12 @@ class VirtualCamEnv:
         self.points_topview = [self.topview.world_point_to_cam_pixel(point) for point in self.reference_points[0:4]]
 
         # 导入背景图
-        self.background = cv2.resize(cv2.imread(background_path), 
-                            (self.topview.width, self.topview.height))
-
-        # AprilTag 检测任务
-        self.AprilTag_detection = AprilTag_detection
-        if self.AprilTag_detection:
-            from src.apriltag_utils import at_detect, at_print
+        background_img = cv2.imread(background_path)
+        assert background_img.shape[1]/background_img.shape[0] == self.topview.img.shape[1]/self.topview.img.shape[0], \
+            "The background image should have the same aspect ratio as the topview image."
+        self.background = cv2.resize(background_img, (self.topview.width, self.topview.height))
+        # assert 
+        # assert len(self.cameras) > 0, "We need at least one camera. Please check the config file."
 
         print("Environment set!")
 
@@ -70,21 +69,13 @@ class VirtualCamEnv:
 
             # 更新俯视图外框
             cam.cam_frame_project(self.topview, (140, 144, 32))
-        
-            # 进行 AprilTag 检测
-            if self.AprilTag_detection:
-                at_print(cam.img, at_detect(cam.img, cam.T44_world_to_cam))
 
-            # 缩放显示
-            cv2.imshow(cam.name, cv2.resize(
-                    cam.img, (int(0.5*cam.width), int(0.5*cam.height))))
-                    
-        cv2.imshow('topview', cv2.resize(
-                self.topview.img, (int(cam.width), int(cam.height))))
+        return [(cam.img, cam.name) for cam in self.cameras] + [(self.topview.img, 'topview')]
 
     def control(self, T_para, command):
         '''更新相机位姿'''
         self.cameras[self.index].update_T(*list_add(T_para, self.cameras[self.index].T_para))  # 更新外参
+        print(self.cameras[self.index].T_para)
         
         if command == -1:  # 解析其他命令
             sys.exit()
@@ -97,12 +88,11 @@ class VirtualCamEnv:
 
     def __del__(self):
         '''析构函数'''
-        print("Environment closed!")
-        cv2.destroyAllWindows()  # 释放并销毁窗口
+        print("Environment closed!")        
 
 
 class Cam:
-    def __init__(self, camera_name, parameters):
+    def __init__(self, camera_name, parameters, AprilTag_detection):
         '''初始化内外参'''
         self.name = camera_name
         self.expand_for_distortion = 0.15  # 每侧扩张比例
@@ -112,8 +102,15 @@ class Cam:
         self.height, self.width = parameters["resolution"]
         self.init_view(*parameters["resolution"])
         self.distortion = parameters["distortion"]
-        if self.distortion:
+
+        if self.distortion:  # 畸变模拟
             self.init_distortion_para(self.distortion)
+
+        self.AprilTag_detection = AprilTag_detection  # AprilTag 检测任务
+        if self.AprilTag_detection:
+            from src.apriltag_utils import ApriltagDetector
+            self.AprilTag = ApriltagDetector(parameters["intrinsic parameters"])
+        
         print("Camera set!")
 
     def update_IM(self, fx, fy, cx, cy):
@@ -194,7 +191,7 @@ class Cam:
         # 注意这里畸变情况下也用标准的 local_to_global 仅在投影到俯视图中会调用
         self.M33_local_to_global = np.linalg.inv(self.M33_global_to_local)
 
-    def init_view(self, height=600, width=1000, color=(255, 255, 255)):
+    def init_view(self, height, width, color=(255, 255, 255)):
         '''
         新建图像，并设置分辨率、背景色
         '''
@@ -269,7 +266,9 @@ class Cam:
         cv2.circle(topview.img, camera_center_projected, 10, color_for_grid, -1)
 
     def init_distortion_para(self, distortion_parameters):
-        '''一组正向模拟畸变系数'''
+        '''
+        正向模拟畸变
+        '''
         k1, k2, k3, k4, k5, k6, p1, p2 = distortion_parameters
         k = self.IM
 
@@ -283,7 +282,9 @@ class Cam:
             k, d, None, k, (int(self.width*scale), int(self.height*scale)), 5)
 
     def update_img(self, background, DEBUG = 0):
-        '''更新图像 同时实现可选的畸变'''
+        '''
+        更新图像 同时实现可选的畸变
+        '''
         if self.distortion:
             # 扩展画布
             scale = self.expand_for_distortion*2+1
@@ -310,9 +311,16 @@ class Cam:
                 background, self.M33_global_to_local, 
                 (self.width, self.height), 
                 borderValue=(255, 255, 255))
+        
+        # 进行 AprilTag 检测
+        if self.AprilTag_detection:
+            tags = self.AprilTag.detect(self.img, self.T44_world_to_cam)
+            self.AprilTag.draw(self.img, tags)
 
 def list_add(a, b):
-    '''一种将list各个元素相加的方法'''
+    '''
+    一种将list各个元素相加的方法
+    '''
     c = []
     for i, j in zip(a,b):
         if not isinstance(i,list):  # 如果不是list那直接相加
@@ -325,7 +333,9 @@ def randomColor():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 def set_reference_points():    
-    '''在地面上设置四个定位空间点'''
+    '''
+    在地面上设置四个定位空间点
+    '''
     points = [np.array([[0], [0], [0]], dtype=float)]*4
     points[0] = np.array([[0], [0], [0]], dtype=float)
     points[1] = np.array([[0], [3000], [0]], dtype=float)
@@ -379,8 +389,3 @@ def save_image(img, rename_by_time, path="/img/"):
     cv2.imencode('.jpg', img)[1].tofile(filename)  # 中文路径保存图片
     print("save img successfuly!")
     print(filename)
-
-if __name__ == "__main__":
-    IM = (500, 500, -500, -300)
-    T = ([0, 0, 0], 2500, 1500, 2500)
-    topview = Cam(IM, T, (1049, 1920))

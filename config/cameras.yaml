@@ -5,19 +5,19 @@
 #   distortion: [k1, k2, k3, k4, k5, k6, p1, p2]
 
 topview:
-  resolution: [1049, 1920]
-  intrinsic parameters: [500, 500, -500, -300]
-  extrinsic parameters: [[0, 0, 0], 2500, 1500, 2500]
+  resolution: [1080, 1920]
+  intrinsic parameters: [1250, 1250, 960, 540]
+  extrinsic parameters: [[0, 0, 0], 0, 0, 2500]
   distortion: 0
 
 cam_1:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
-  extrinsic parameters: [[0, 0, 0], -3750, -1300, 1600]
+  extrinsic parameters: [[0, 0, 0], 200, -100, 1600]
   distortion: [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
 
 cam_2:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
-  extrinsic parameters: [[0, 0, 0], -1750, -1450, 3750]
-  distortion: [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
+  extrinsic parameters: [[0, 0, 0], -850, -450, 2250]
+  distortion: 0  # [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
