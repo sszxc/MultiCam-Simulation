@@ -75,7 +75,7 @@ class VirtualCamEnv:
     def control(self, T_para, command):
         '''更新相机位姿'''
         self.cameras[self.index].update_T(*list_add(T_para, self.cameras[self.index].T_para))  # 更新外参
-        print(self.cameras[self.index].T_para)
+        # print(self.cameras[self.index].T_para)
         
         if command == -1:  # 解析其他命令
             sys.exit()

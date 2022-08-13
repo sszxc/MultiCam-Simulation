@@ -4,6 +4,7 @@
 #   extrinsic parameters: [[euler], dx, dy, dz]
 #   distortion: [k1, k2, k3, k4, k5, k6, p1, p2]
 
+# 1080*1920 pixels stand for 2160*3840mm ground
 topview:
   resolution: [1080, 1920]
   intrinsic parameters: [1250, 1250, 960, 540]
