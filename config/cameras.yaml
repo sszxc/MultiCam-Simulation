@@ -13,11 +13,11 @@ topview:
 cam_1:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
-  extrinsic parameters: [[0, 0, 0], 200, -100, 1600]
+  extrinsic parameters: [[0, 0, 0], -800, 400, 1600]
   distortion: [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
 
 cam_2:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
-  extrinsic parameters: [[0, 0, 0], -850, -450, 2250]
+  extrinsic parameters: [[0, 0, 0], 900, -200, 2050]
   distortion: 0  # [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
