@@ -25,7 +25,7 @@ class ApriltagDetector:
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         tags = self.at_detector.detect(
             frame_gray, estimate_tag_pose=True, 
-            camera_params=self.camera_params, tag_size=0.27083)
+            camera_params=self.camera_params, tag_size=0.162)
         for tag in tags:
             # 位姿估计
             T44_tag_to_cam = np.c_[np.r_[tag.pose_R, [[0, 0, 0]]], np.r_[tag.pose_t*1000, [[1]]]]  # 拼接成4*4矩阵
