@@ -10,7 +10,7 @@ import copy
 import time
 import yaml
 import sys
-
+from src.distortion_para_fit import *
 
 class VirtualCamEnv:
     def __init__(self, config_file_path, background_path, AprilTag_detection=False):
@@ -269,7 +269,13 @@ class Cam:
         '''
         正向模拟畸变
         '''
-        k1, k2, k3, k4, k5, k6, p1, p2 = distortion_parameters
+    
+        data_x, data_y = generate_data(distortion_func_3para, distortion_parameters)  # 真实数据
+
+        popt, pcov = para_fit(data_x, data_y, distortion_func_6para)
+
+        k1, k2, k3, k4, k5, k6 = popt
+        p1, p2 = 0, 0
         k = self.IM
 
         scale = 2*self.expand_for_distortion+1

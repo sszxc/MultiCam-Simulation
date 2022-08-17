@@ -2,7 +2,7 @@
 #   resolution: [height, weight]
 #   intrinsic parameters: [fx, fy, cx, cy]
 #   extrinsic parameters: [[euler], dx, dy, dz]
-#   distortion: [k1, k2, k3, k4, k5, k6, p1, p2]
+#   distortion: [k1, k2, k3]  # dont care about [p1, p2]
 
 # 1080*1920 pixels stand for 2160*3840mm ground
 topview:
@@ -15,10 +15,11 @@ cam_1:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
   extrinsic parameters: [[0, 0, 0], -800, 400, 1600]
-  distortion: [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
+  distortion: [-0.335814019871572, 0.101431758719313, 0.0]
 
 cam_2:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
   extrinsic parameters: [[0, 0, 0], 900, -200, 2050]
-  distortion: 0  # [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
+  distortion: 0
+  # [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]
